@@ -1,42 +1,52 @@
 # main.py
+import signal
+import sys
 from context import ConversationContext, ConversationState
 from intent_handler import IntentDetector, ConversationalResponseGenerator
 from fallback import GeminiFallback
+from engine import ConversationalSupportEngine  # Import the correct class
 
-class ConversationalSupportEngine:
-    def __init__(self):
-        self.intent_detector = IntentDetector()
-        self.response_generator = ConversationalResponseGenerator()
-        self.fallback_gemini = GeminiFallback()
-        self.context = ConversationContext()
+# Remove the duplicate class definition - use the one from engine.py
 
-    def process_message(self, user_message: str) -> str:
-        result = self.intent_detector.detect_intent(user_message, self.context)
-        intent = result["intent"]
-        confidence = result["confidence"]
-        matched = result["matched_patterns"]
+def save_and_exit(engine):
+    """Save memories and exit gracefully"""
+    print("\nBot: Saving your memories... 💾")
+    engine.memory.save_memories()
+    print("Bot: Peace out! 👋")
+    sys.exit(0)
 
-        self.context.add_intent(intent, confidence, matched)
-
-        if intent == "unknown" or confidence < 0.4 or not matched:
-            reply = self.fallback_gemini.respond(user_message, self.context.conversation_history)
-            self.context.set_state(ConversationState.INITIAL, "general_chat")
-            self.context.add_message(user_message, reply, "general_chat", confidence)
-            return reply
-
-        response, new_state = self.response_generator.generate_response(intent, self.context, result)
-        self.context.set_state(new_state, intent)
-        self.context.attempts += 1
-        self.context.add_message(user_message, response, intent, confidence)
-        return response
+def signal_handler(sig, frame, engine):
+    """Handle Ctrl+C gracefully"""
+    save_and_exit(engine)
 
 if __name__ == "__main__":
-    print("🤖 Chatbot is ready! Type 'exit' to leave.\n")
+    print("🤖 Chatbot is alive! Type 'exit' to leave.\n")
+    
+    # Get username/client_id from user
+    client_id = input("Enter your username/client ID: ").strip()
+    if not client_id:
+        client_id = "anonymous_user"
+        print(f"Using default client ID: {client_id}")
+    else:
+        print(f"Welcome, {client_id}!")
+    
+    print("\nYou can start chatting now. Type 'exit' to leave.\n")
+    
     engine = ConversationalSupportEngine()
-    while True:
-        user_input = input("You: ")
-        if user_input.lower() in ("exit", "quit"):
-            print("Bot: Farewell, human!")
-            break
-        reply = engine.process_message(user_input)
-        print("Bot:", reply)
+    
+    # Set up signal handler for Ctrl+C
+    signal.signal(signal.SIGINT, lambda sig, frame: signal_handler(sig, frame, engine))
+    
+    try:
+        while True:
+            user_input = input(f"{client_id}: ")
+            if user_input.lower() in ("exit", "quit"):
+                save_and_exit(engine)
+            # Only process non-exit commands through the engine
+            reply = engine.process_message(client_id, user_input)
+            print("Bot:", reply)
+    except KeyboardInterrupt:
+        save_and_exit(engine)
+    except Exception as e:
+        print(f"❌ An error occurred: {e}")
+        save_and_exit(engine)
