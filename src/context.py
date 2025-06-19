@@ -1,4 +1,3 @@
-# context.py
 import uuid
 from datetime import datetime
 from typing import Dict, List
@@ -26,6 +25,11 @@ class ConversationContext:
     attempts: int = 0
 
     def add_message(self, user_msg: str, ai_response: str, detected_intent: str, confidence: float):
+        from client_memory import ClientMemoryManager
+        if ClientMemoryManager().is_exit_command(user_msg):
+            print(f"[DEBUG] Skipped storing exit message: {user_msg}")
+            return
+        print(f"[DEBUG] Storing message: {user_msg}")
         self.conversation_history.append({
             'timestamp': datetime.now(),
             'user_message': user_msg,
