@@ -29,11 +29,11 @@ class ConversationalSupportEngine:
         if intent == "unknown" or confidence < 0.4 or not matched:
             reply = self.fallback.respond(user_message, context.conversation_history)
             context.set_state(ConversationState.INITIAL, "general_chat")
-            context.add_message(user_message, reply, "general_chat", confidence)
+            context.add_message(user_message, reply, "general_chat", confidence, result.get("entities"))
             return reply
 
         response, new_state = self.response_generator.generate_response(intent, context, result)
         context.set_state(new_state, intent)
         context.attempts += 1
-        context.add_message(user_message, response, intent, confidence)
+        context.add_message(user_message, response, intent, confidence, result.get("entities"))
         return response
