@@ -123,8 +123,8 @@ print(response)
 
 ## 🧙‍♂️ Contributions & Philosophy
 
-This is not just a support bot — it’s a structured **thinking agent**.
-It believes in:
+
+This bot believes in:
 
 * Contextual conversations
 * Intelligent fallback
