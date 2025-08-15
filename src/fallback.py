@@ -1,7 +1,7 @@
 # fallback.py
 import google.generativeai as genai
 
-genai.configure(api_key="AIzaSyBK-niukNq0Gg-da-CwyJd6ec-4xrQSgvs")
+genai.configure(api_key="API key")
 
 class GeminiFallback:
     def __init__(self):
